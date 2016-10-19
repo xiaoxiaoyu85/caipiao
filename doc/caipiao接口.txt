@@ -1,0 +1,4 @@
+﻿
+参数:{"Cmd": "UpdateCaiPiaoData"}
+返回值: {"info": [], "result": "sucess", "rescode": "1000"}
+接口:  ParserCaiPiaoCmd(strCmdJson)

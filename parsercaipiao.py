@@ -185,14 +185,13 @@ if __name__ == "__main__":
 
     conn = GetConn('caipiao.db')
     sql = 'CREATE TABLE shishicai (\
+    [no]   BIGINT       PRIMARY KEY AUTOINCREMENT\
     dateno VARCHAR (16) DEFAULT NULL,\
     wan    INT,\
     qian   INT,\
     bai    INT,\
     shi    INT,\
     ge     INT,\
-    [no]   BIGINT       PRIMARY KEY\
-                        UNIQUE\
     );'
     CreateTable(conn, sql)
 

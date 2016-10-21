@@ -1,0 +1,33 @@
+DROP TABLE IF EXISTS shishicai;
+CREATE TABLE shishicai (
+    [no]   INTEGER      PRIMARY KEY AUTOINCREMENT,
+    dateno VARCHAR (16) DEFAULT NULL,
+    wan    INT,
+    qian   INT,
+    bai    INT,
+    shi    INT,
+    ge     INT    
+);
+
+-- 索引：wanindex
+DROP INDEX IF EXISTS wanindex;
+CREATE INDEX wanindex ON shishicai (wan);
+
+-- 索引：qianindex
+DROP INDEX IF EXISTS qianindex;
+CREATE INDEX qianindex ON shishicai (qian);
+
+-- 索引：baiindex
+DROP INDEX IF EXISTS baiindex;
+CREATE INDEX baiindex ON shishicai (bai);
+
+-- 索引：shiindex
+DROP INDEX IF EXISTS shiindex;
+CREATE INDEX shiindex ON shishicai (shi);
+
+-- 索引：geindex
+DROP INDEX IF EXISTS geindex;
+CREATE INDEX geindex ON shishicai (ge);
+
+COMMIT TRANSACTION;
+PRAGMA foreign_keys = on;

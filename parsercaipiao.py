@@ -33,12 +33,9 @@ STR_PARSE_ERR = '1003'             #请求结果分析失败
 STR_NEEDLOGIN_ERR = '1004'
 STR_SERVER_DATA_ERR = '1005'
 
-#strDataFileName = 'caipiao.data'
 strUrl = "http://caipiao.baidu.com/lottery/draw/sorts/ajax_get_draw_data.php?"
+sqlAdp = SqliteAdp('caipiao.db')
 
-#import calendar
-#cal = calendar.month(2015, 12)
-#print cal
 
 
 
@@ -55,8 +52,7 @@ def GetCurrentTimeStr():
 
 
 
-def GetCaiPiaoData(fhandle, strUrl, strDate):
-    #SetCook('')
+def GetCaiPiaoData(strUrl, strDate):
     Httplib2SetCook('')
     strResult = "success"
     listPara = []
@@ -83,18 +79,17 @@ def GetCaiPiaoData(fhandle, strUrl, strDate):
         strNo = strPhase[8 : len(strPhase)]
         listCode = (dictPerCP["result"]["result"][0]["data"])
         strCode = ''.join(listCode)
-        dictPer = {}
-        dictPer[strNo] = strCode
-        listPerData.append(dictPer)
-        #strPerCP = strPerCP + strCode + '|'
+        strSql = 'INSERT INTO shishicai values (NULL, %s, %s, %s, %s, %s, %s)' %(strPhase, listCode[0], listCode[1], listCode[2], listCode[3], listCode[4])
+        sqlAdp.ExecuSql(strSql)
 
-    dictEveryCP["phase"] = listPerData
-    strPerCP = json.dumps(dictEveryCP, ensure_ascii=False)
-    strPerCP = strPerCP + '\n'
-    fhandle.write(strPerCP)
-    fhandle.flush()
-    #print strPerCP
-    #print '%s ---------------------------------------------------' %GetCurrentTimeStr()
+
+    #dictEveryCP["phase"] = listPerData
+    #strPerCP = json.dumps(dictEveryCP, ensure_ascii=False)
+    #strPerCP = strPerCP + '\n'
+    #fhandle.write(strPerCP)
+    #fhandle.flush()
+    print resp
+    print '%s --------------------------------------------------- success' %GetCurrentTimeStr()
     return dataJson
 
 def GetDateSpan(strFrom):
@@ -107,9 +102,6 @@ def GetDateSpan(strFrom):
         listFromStr = strFrom.split('-')
         dtFrom = datetime.datetime(int(listFromStr[0]), int(listFromStr[1]), int(listFromStr[2]), 0, 0, 0)
         iDaySpan = (d - dtFrom).days
-        #if 0 == iDaySpan:
-        #    iDaySpan = 1
-
 
     while iDaySpan >= 0:
         dayscount = datetime.timedelta(iDaySpan)
@@ -121,27 +113,23 @@ def GetDateSpan(strFrom):
         iDaySpan = iDaySpan - 1
     return listSpan
 
-def UpdateCaiPiaoData(strDataFileName):
-    fhandle = open(strDataFileName, 'r+')
-    listCaiPiao = fhandle.readlines()
-    iLen = len(listCaiPiao)
+def GetDateSpanList():
     listSpan = []
-    if 0 == iLen:
-        listSpan = GetDateSpan('')
-    else:        
-        strLastCP = listCaiPiao[iLen - 1]
-        iOffSet = (len(strLastCP) + 1) * -1
-        fhandle.seek(iOffSet, 2)
-        #fhandle.write("china")
-        #fhandle.close()
-        strLastCP = strLastCP.replace('\n', '')
-        dictLastCP = json.loads(strLastCP)
-        strLastCPDate = dictLastCP["date"]
-        listSpan = GetDateSpan(strLastCPDate)
+    strSql = 'select * from shishicai order by no desc limit 0, 1;'
+    listRes = sqlAdp.ExecuSearch(strSql)
+    strLastCPDate = ''
+    if len(listRes) > 0:
+        strTmpDate = listRes[0][1]
+        strLastCPDate = strTmpDate[0:4] + '-' + strTmpDate[4 : 6] + '-' + strTmpDate[6 : 8]
+    listSpan = GetDateSpan(strLastCPDate)
+    return listSpan
+
+def UpdateCaiPiaoData(strDataFileName):
+    listSpan = GetDateSpanList()
     for strDate in listSpan:
-        GetCaiPiaoData(fhandle, strUrl, strDate)
+        GetCaiPiaoData(strUrl, strDate)
         if len(listSpan) >= 3:
-            time.sleep(1)
+            time.sleep(15)
     fhandle.close()
     return STR_SUCESS, STR_OK
 
@@ -162,6 +150,7 @@ def ParserCaiPiaoCmd(strCmdJson):
             strRes = STR_FAIL
             strResCode = STR_UNKNOW_CMD
     except Exception , e:
+        print "error-------"
         strRes = STR_FAIL
         strResCode = STR_PARSE_ERR
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -182,22 +171,26 @@ def ParserCaiPiaoCmd(strCmdJson):
     return resultjson
 
 if __name__ == "__main__":
+    #sql = 'CREATE TABLE shishicai1 (\
+    #no   INTEGER       PRIMARY KEY AUTOINCREMENT,\
+    #dateno VARCHAR (16) DEFAULT NULL,\
+    #wan    INT,\
+    #qian   INT,\
+    #bai    INT,\
+    #shi    INT,\
+    #ge     INT\
+    #);'
+    #conn = sqlAdp.CreateTable(sql)
+    #strSql = 'INSERT INTO shishicai values (NULL, "20161012002", 1, 1, 1, 1, 1)'
 
-    conn = GetConn('caipiao.db')
-    sql = 'CREATE TABLE shishicai (\
-    [no]   BIGINT       PRIMARY KEY AUTOINCREMENT\
-    dateno VARCHAR (16) DEFAULT NULL,\
-    wan    INT,\
-    qian   INT,\
-    bai    INT,\
-    shi    INT,\
-    ge     INT,\
-    );'
-    CreateTable(conn, sql)
 
+    #strSql = 'select count(*) from shishicai;'
+    #sqlAdp.ExecuSearch(strSql)
     dictCmd = {}
     dictCmd["Cmd"] = "UpdateCaiPiaoData"
-    dictCmd['datafilepath'] = "E:\study\web\caipiaoparser\caipiao.data"
+    BIN_DIR = os.path.dirname(__file__)
+    strDataPath = os.path.join(BIN_DIR, 'caipiao.data')
+    dictCmd['datafilepath'] = strDataPath
     strCmdJson = json.dumps(dictCmd, ensure_ascii = False)
     print ParserCaiPiaoCmd(strCmdJson)
     

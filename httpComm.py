@@ -8,7 +8,7 @@ import httplib2
 import cookielib
 import socket
 import time
-from parsercaipiao import g_logger
+#from parsercaipiao import g_logger
 
 def SetCook(strCookie):
     cj = cookielib.CookieJar()
@@ -72,31 +72,10 @@ def Httplib2Get(strUrl, listPara, strMethod = 'GET'):
         strParamData = urllib.urlencode(listPara)
         strUrl = strUrl + strParamData
         strRsp = ""
-        g_logger.info(strUrl)
+        #g_logger.info(strUrl)
         response, content = http.request(strUrl, strMethod, body=None, headers = dictHeaders)
         strRsp = content
         #contextType = response.get("content-type")        
     else:
         response, content = http.request(strUrl, strMethod, body = urllib.urlencode(listPara), headers = dictHeaders)
     return response, content
-
-'''
-@todo: 解析html头中的编码信息
-@param htmlText:待解析html文本 
-@return: 字符编码
-'''
-def GetHtmlHeaderCharset(htmlText):
-    try:
-        soup = BeautifulSoup(htmlText)
-        tag = soup.find("meta", attrs={"http-equiv":"Content-Type"})
-        if(tag):
-            if (tag.get("content").find("gb2312") >=0 or tag.get("content").find("gbk") >= 0):
-                return "gbk"
-            elif (tag.get("content").find("utf-8") >= 0):
-                return "utf-8"
-            else:
-                return ""
-        else:
-            return ""
-    except Exception as e:
-        return ""

@@ -14,8 +14,8 @@ sys.setdefaultencoding("utf-8")
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-
 from httpComm import *
+from sqlliteadp import *
 
 handler = RotatingFileHandler(filename= os.environ["APPDATA"] + "\\" + "stock.log", mode="a", maxBytes=10*1024*1024, backupCount=5)
 formatter = logging.Formatter("%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s")
@@ -182,6 +182,20 @@ def ParserCaiPiaoCmd(strCmdJson):
     return resultjson
 
 if __name__ == "__main__":
+
+    conn = GetConn('caipiao.db')
+    sql = 'CREATE TABLE shishicai (\
+    dateno VARCHAR (16) DEFAULT NULL,\
+    wan    INT,\
+    qian   INT,\
+    bai    INT,\
+    shi    INT,\
+    ge     INT,\
+    [no]   BIGINT       PRIMARY KEY\
+                        UNIQUE\
+    );'
+    CreateTable(conn, sql)
+
     dictCmd = {}
     dictCmd["Cmd"] = "UpdateCaiPiaoData"
     dictCmd['datafilepath'] = "E:\study\web\caipiaoparser\caipiao.data"
